@@ -1,0 +1,88 @@
+{
+ "doc_type": "boq",
+ "title": "Phase-II Substation — Electrical Package (Tender HVPNL/EL/2026/07)",
+ "summary": "Supply of major and balance-of-plant electrical equipment for the 33/11 kV Phase-II substation.",
+ "model": "claude-opus-4-8",
+ "items": [
+  {
+   "item_no": "1",
+   "description": "33/11 kV, 10 MVA ONAN Power Transformer",
+   "unit": "no",
+   "quantity": "1",
+   "category": "Power Transformers",
+   "complexity": "detailed",
+   "spec_summary": "10 MVA, 33/11 kV, Dyn11, ONAN. Losses per IS 1180 EEL-1, impedance 10±7.5% per IS 2026, OLTC ±10%, type tests from CPRI/NABL, warranty ≥24 months.",
+   "group": "g1"
+  },
+  {
+   "item_no": "2",
+   "description": "11 kV Indoor VCB Switchgear (8 panels)",
+   "unit": "set",
+   "quantity": "1",
+   "category": "Switchgear",
+   "complexity": "detailed",
+   "spec_summary": "12 kV, 1250 A busbar, 25 kA/3s, vacuum draw-out breakers, IP4X, per IEC 62271-200. Numerical protection, 110 V DC.",
+   "group": "g2"
+  },
+  {
+   "item_no": "3",
+   "description": "HT XLPE Power Cable, 11 kV, 3C x 240 sq.mm",
+   "unit": "m",
+   "quantity": "1200",
+   "category": "Cables & Conductors",
+   "complexity": "simple",
+   "spec_summary": "11 kV (E) XLPE, 3C×240 sq.mm, aluminium, armoured, per IS 7098-2 / IEC 60502-2.",
+   "group": "g3"
+  },
+  {
+   "item_no": "4",
+   "description": "LT XLPE Power Cable, 1.1 kV, 3.5C x 185 sq.mm",
+   "unit": "m",
+   "quantity": "800",
+   "category": "Cables & Conductors",
+   "complexity": "simple",
+   "spec_summary": "1.1 kV XLPE, 3.5C×185 sq.mm, aluminium, armoured, per IS 7098-1.",
+   "group": "g3"
+  },
+  {
+   "item_no": "5",
+   "description": "Earthing Strip, GI 50x6 mm",
+   "unit": "m",
+   "quantity": "600",
+   "category": "Electrical Equipment",
+   "complexity": "simple",
+   "spec_summary": "Hot-dip galvanised earthing strip 50×6 mm per IS 3043.",
+   "group": "g3"
+  },
+  {
+   "item_no": "6",
+   "description": "LED Street Light Fittings, 90 W",
+   "unit": "no",
+   "quantity": "40",
+   "category": "Electrical Equipment",
+   "complexity": "simple",
+   "spec_summary": "90 W LED, IP66, ≥120 lm/W, surge 10 kV, per IS 10322 / LM-79.",
+   "group": "g3"
+  }
+ ],
+ "groups": [
+  {
+   "group": "g1",
+   "title": "33/11 kV, 10 MVA Power Transformer",
+   "combined": false,
+   "rationale": "Engineered item with a detailed datasheet — evaluated on its own sheet."
+  },
+  {
+   "group": "g2",
+   "title": "11 kV VCB Switchgear",
+   "combined": false,
+   "rationale": "Detailed switchgear specification — its own sheet."
+  },
+  {
+   "group": "g3",
+   "title": "Cables, Earthing & Lighting (commodity items)",
+   "combined": true,
+   "rationale": "Four simple commodity items with short specs — combined into one comparison sheet."
+  }
+ ]
+}
