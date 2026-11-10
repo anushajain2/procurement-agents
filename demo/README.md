@@ -1,5 +1,7 @@
 # Product demo video
 
+A 1:39 problem → solution → impact cut lives in [`short/`](short/README.md).
+
 [`oton_demo.mp4`](oton_demo.mp4) is a 4½-minute captioned walkthrough of Oton (1920×1080, 30 fps, no audio).
 It follows one 10 MVA power transformer package through the whole cycle:
 

@@ -1,0 +1,294 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden}
+body{font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;color:#18181B;
+  background:radial-gradient(1400px 900px at 50% 40%,#FFFFFF 0%,#F4F4F6 60%,#ECECEF 100%)}
+#stage{position:absolute;inset:0}
+.abs{position:absolute}
+.kicker{font-size:17px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#0F8F80}
+.h1{font-size:58px;font-weight:700;letter-spacing:-.03em;line-height:1.12}
+.card{background:#fff;border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 30px rgba(24,24,27,.10);border:1px solid #E7E7EA}
+.bar{height:9px;border-radius:5px;background:#E6E6EA}
+.mono{font-family:'JetBrains Mono',monospace}
+.cell{position:absolute;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;border-right:1px solid #ECECEF;border-bottom:1px solid #ECECEF}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:999px;background:#fff;border:1px solid #E4E4E7;box-shadow:0 6px 20px rgba(0,0,0,.07);font-size:21px;font-weight:600}
+.bubble{position:absolute;background:#18181B;color:#fff;font-size:20px;font-weight:500;padding:12px 18px;border-radius:14px;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.bubble:after{content:"";position:absolute;left:28px;bottom:-9px;border:9px solid transparent;border-top-color:#18181B;border-bottom:0}
+.avatar{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:700}
+</style></head>
+<body><div id="stage"></div>
+<script>
+// ── tiny animation kit ───────────────────────────────────────────────────────
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeIn = (t) => t * t * t;
+const back = (t) => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const k = (t, t0, d, e = easeOut) => e(clamp((t - t0) / d));
+const lerp = (a, b, x) => a + (b - a) * x;
+const $ = (html) => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstChild; };
+const stage = document.getElementById("stage");
+const LOGO = "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5";
+const logoTile = (s, bg = "#18181B", fg = "#fff") => `<div style="width:${s}px;height:${s}px;border-radius:${s * .26}px;background:${bg};display:flex;align-items:center;justify-content:center"><svg width="${s * .56}" height="${s * .56}" viewBox="0 0 24 24" fill="none" stroke="${fg}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${LOGO}"/></svg></div>`;
+function headline(kicker, text, x, y, w, align = "left") {
+  const el = $(`<div class="abs" style="left:${x}px;top:${y}px;width:${w}px;text-align:${align}">
+    ${kicker ? `<div class="kicker" style="margin-bottom:18px">${kicker}</div>` : ""}<div class="h1"></div></div>`);
+  const h = el.querySelector(".h1");
+  text.split(" ").forEach((w) => { const s = document.createElement("span"); s.textContent = w + " "; s.style.display = "inline-block"; s.style.whiteSpace = "pre"; h.appendChild(s); });
+  stage.appendChild(el);
+  const words = [...h.children], kick = el.querySelector(".kicker");
+  return (t, t0 = 0.15, per = 0.045) => {
+    if (kick) { const a = k(t, t0 - 0.1, 0.5); kick.style.opacity = a; kick.style.transform = `translateY(${(1 - a) * 10}px)`; }
+    words.forEach((s, i) => { const a = k(t, t0 + i * per, 0.55); s.style.opacity = a; s.style.transform = `translateY(${(1 - a) * 22}px)`; s.style.filter = `blur(${(1 - a) * 6}px)`; });
+  };
+}
+function docCard(vendor, sub, w = 300, h = 390, rows = 7) {
+  let lines = "";
+  for (let i = 0; i < rows; i++) lines += `<div class="abs bar ln" style="left:24px;top:${118 + i * 30}px;width:${[220, 180, 240, 200, 160, 230, 190, 210, 170][i % 9] * (w / 300)}px"></div>`;
+  return $(`<div class="card abs" style="width:${w}px;height:${h}px;overflow:hidden">
+    <div class="abs" style="left:24px;top:22px;font-size:${w > 250 ? 17 : 14}px;font-weight:800;letter-spacing:.02em">${vendor}</div>
+    <div class="abs" style="left:24px;top:${w > 250 ? 48 : 44}px;font-size:${w > 250 ? 14 : 12}px;color:#71717A">${sub}</div>
+    <div class="abs" style="left:24px;right:24px;top:84px;height:2px;background:#18181B"></div>${lines}
+    <div class="abs" style="display:${h >= 300 ? "block" : "none"};left:24px;right:24px;bottom:22px;height:${h * 0.16}px;border:1.5px solid #E6E6EA;border-radius:6px;
+      background:repeating-linear-gradient(90deg,transparent 0 33%,#E6E6EA 33% calc(33% + 1.5px)),repeating-linear-gradient(0deg,transparent 0 24px,#EFEFF2 24px 25.5px)"></div></div>`);
+}
+
+// ── Scenes ───────────────────────────────────────────────────────────────────
+const SCENES = {};
+
+// 1 · A mountain of bids
+SCENES.pile = { dur: 6.4, build() {
+  const hl = headline("The problem", "Every equipment purchase ends in a pile of vendor bids.", 150, 330, 760);
+  const vendors = [["VOLTAMP TRANSFORMERS", "Technical bid · 212 pages"], ["EMCO LIMITED", "Technical offer · 186 pages"], ["NORTHSTAR TRANSFORMERS", "Techno-commercial · 242 pages"]];
+  const cards = [];
+  vendors.forEach(([v, sub], s) => {
+    for (let j = 0; j < 7; j++) {
+      const c = docCard(v, sub); stage.appendChild(c);
+      cards.push({ c, s, j, x: 1000 + s * 250 + (j % 3) * 7 - 7, y: 260 + s * 70 - j * 10, r: (s - 1) * 6 + ((j * 37) % 7 - 3) * 1.4 });
+    }
+  });
+  const counter = $(`<div class="abs" style="left:150px;top:640px"><div class="pill"><span style="color:#71717A;font-weight:500">Pages to review</span><span class="n mono" style="font-size:24px">0</span></div></div>`);
+  stage.appendChild(counter);
+  const n = counter.querySelector(".n");
+  return (t) => {
+    hl(t);
+    cards.forEach(({ c, s, j, x, y, r }) => {
+      const t0 = 0.5 + s * 0.55 + j * 0.13, a = k(t, t0, 0.6, back);
+      const drift = (t - 3) * 4;
+      c.style.left = x + "px"; c.style.top = y - (1 - a) * 420 + "px";
+      c.style.opacity = clamp((t - t0) / 0.2);
+      c.style.transform = `rotate(${r * a + (1 - a) * (r * 2.5)}deg) translateY(${drift}px)`;
+    });
+    const a = k(t, 1.6, 0.5); counter.style.opacity = a; counter.style.transform = `translateY(${(1 - a) * 16}px)`;
+    n.textContent = Math.round(640 * k(t, 1.8, 3.4, easeInOut));
+  };
+}};
+
+// 2 · Retyping by hand — a web of copied values
+SCENES.copy = { dur: 8.6, build() {
+  const hl = headline("", "Engineers read every page and retype each value into a spreadsheet, by hand.", 150, 70, 1620, "center");
+  const docs = [["VOLTAMP", "Tech bid · p.5"], ["EMCO", "Tech offer · p.5"], ["NORTHSTAR", "Offer · p.9"]].map(([v, s], i) => {
+    const d = docCard(v, s, 250, 250, 4); d.style.left = "180px"; d.style.top = 300 + i * 232 + "px"; d.style.height = "212px"; stage.appendChild(d); return d;
+  });
+  // Spreadsheet
+  const sx = 960, sy = 300, rw = 760, rh = 58, cw = [250, 170, 170, 170];
+  const params = ["No-load loss", "Load loss", "Impedance", "Tap changer", "Winding", "Insulation", "Type tests", "Warranty"];
+  const vals = [["8.2 kW", "9.4 kW", "8.9 kW"], ["52 kW", "54 kW", "54.5 kW"], ["10.2%", "10.0%", "9.8%"], ["±10%, 1.25%", "±10%, 1.25%", "±10%, 2.5%"], ["Copper", "Copper", "Alum."], ["170 / 70", "170 / 70", "170 / 70"], ["CPRI", "On request", "ERDA"], ["30 mo", "24 mo", "18 mo"]];
+  const sheet = $(`<div class="card abs" style="left:${sx}px;top:${sy - 64}px;width:${rw}px;height:${64 + 54 + params.length * rh}px;overflow:hidden">
+    <div class="abs" style="left:0;right:0;top:0;height:46px;background:#18181B;color:#fff;font-size:16px;display:flex;align-items:center;padding-left:18px;gap:10px">📊 TBE_Transformer_v7_FINAL(2).xlsx</div></div>`);
+  stage.appendChild(sheet);
+  const hdr = ["Parameter", "Voltamp", "EMCO", "Northstar"];
+  let cx = 0; hdr.forEach((h, i) => { sheet.appendChild($(`<div class="cell" style="left:${cx}px;top:64px;width:${cw[i]}px;height:54px;background:#F4F4F5;color:#52525B;font-size:14px;letter-spacing:.04em;text-transform:uppercase">${h}</div>`)); cx += cw[i]; });
+  const cells = [];
+  params.forEach((p, r) => {
+    sheet.appendChild($(`<div class="cell" style="left:0;top:${118 + r * rh}px;width:${cw[0]}px;height:${rh}px;justify-content:flex-start;padding-left:18px;font-weight:500">${p}</div>`));
+    for (let v = 0; v < 3; v++) {
+      const el = $(`<div class="cell mono" style="left:${cw[0] + v * 170}px;top:${118 + r * rh}px;width:170px;height:${rh}px;font-size:15px"></div>`);
+      sheet.appendChild(el); cells.push({ el, r, v, val: vals[r][v] });
+    }
+  });
+  const svg = $(`<svg class="abs" width="1920" height="1080" style="left:0;top:0;pointer-events:none"></svg>`); stage.insertBefore(svg, sheet);
+  // Order: shuffle-ish
+  const order = cells.map((c, i) => ({ c, key: ((i * 7) % cells.length) })).sort((a, b) => a.key - b.key).map((x) => x.c);
+  const links = order.map((c, i) => {
+    const line = (i * 3) % 4;
+    const x1 = 180 + 24 + 150, y1 = 300 + c.v * 232 + 118 + line * 30 + 4;
+    const x2 = sx + 2, y2 = sy + 54 + c.r * rh + rh / 2;
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", `M${x1},${y1} C${x1 + 260},${y1} ${x2 - 300},${y2} ${x2},${y2}`);
+    p.setAttribute("fill", "none"); p.setAttribute("stroke-width", "2.2"); svg.appendChild(p);
+    const len = p.getTotalLength(); p.style.strokeDasharray = len;
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle"); dot.setAttribute("r", "6"); svg.appendChild(dot);
+    // Accelerating cadence: slow at first, then a flurry.
+    const t0 = 1.0 + 4.6 * Math.pow(i / order.length, 0.62);
+    return { p, len, dot, c, t0, x1, y1, line };
+  });
+  const errs = [{ r: 0, v: 1, c: "#B03A28", bg: "#F7E7E3", tag: "Over limit?" }, { r: 4, v: 2, c: "#B03A28", bg: "#F7E7E3", tag: "Allowed?" }, { r: 6, v: 1, c: "#8A6410", bg: "#F6EFDF", tag: "Missing" }];
+  const tags = errs.map((e) => { const el = $(`<div class="bubble" style="font-size:17px;padding:8px 13px">${e.tag}</div>`); stage.appendChild(el); return { ...e, el }; });
+  return (t) => {
+    hl(t, 0.1, 0.03);
+    docs.forEach((d, i) => { const a = k(t, 0.25 + i * 0.12, 0.6); d.style.opacity = a; d.style.transform = `translateX(${(1 - a) * -40}px)`; });
+    { const a = k(t, 0.45, 0.6); sheet.style.opacity = a; sheet.style.transform = `translateX(${(1 - a) * 40}px)`; }
+    // Reset doc-line highlights each frame
+    docs.forEach((d) => d.querySelectorAll(".ln").forEach((l) => (l.style.background = "#E6E6EA")));
+    links.forEach(({ p, len, dot, c, t0, line }) => {
+      const a = k(t, t0, 0.55, easeInOut), live = t >= t0;
+      p.style.strokeDashoffset = len * (1 - a);
+      p.setAttribute("stroke", a < 1 ? "rgba(15,143,128,.85)" : "rgba(113,113,122,.28)");
+      p.style.opacity = live ? 1 : 0;
+      if (live && a < 1) { const pt = p.getPointAtLength(len * a); dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y); dot.setAttribute("fill", "#0F8F80"); dot.style.opacity = 1;
+        docs[c.v].querySelectorAll(".ln")[line].style.background = "#FDE68A"; } else dot.style.opacity = 0;
+      c.el.textContent = a >= 1 ? c.val : ""; c.el.style.color = "#18181B";
+      const fl = a >= 1 ? 1 - clamp((t - t0 - 0.55) / 0.5) : 0; c.el.style.background = `rgba(20,184,166,${0.28 * fl})`;
+    });
+    tags.forEach(({ r, v, c, bg, el }, i) => {
+      const t0 = 6.5 + i * 0.3, a = k(t, t0, 0.45, back);
+      const cell = cells.find((x) => x.r === r && x.v === v);
+      if (t >= t0) { cell.el.style.background = bg; cell.el.style.color = c; }
+      el.style.left = sx + cw[0] + v * 170 + 30 + "px"; el.style.top = sy + 54 + r * rh - 48 + "px";
+      el.style.opacity = clamp(a); el.style.transform = `scale(${0.6 + 0.4 * a})`; el.style.transformOrigin = "20px 100%";
+    });
+  };
+}};
+
+// 3 · Emailed for sign-off, untraceable
+SCENES.email = { dur: 7.6, build() {
+  const hl = headline("", "Then it's emailed up for sign-off, and nobody can check where a number came from.", 160, 70, 1600, "center");
+  const ppl = [["RK", "#2C5C86", "Procurement Manager"], ["MN", "#7A4FA0", "Category Head"], ["SI", "#BC8521", "CFO"]];
+  const xs = [500, 960, 1420], y = 620;
+  const avs = ppl.map(([i, c, role], n) => { const el = $(`<div class="abs" style="left:${xs[n] - 48}px;top:${y - 48}px;text-align:center"><div class="avatar" style="background:${c};width:132px;height:132px;font-size:44px;margin-left:-18px">${i}</div><div style="margin-top:18px;font-size:25px;color:#52525B;font-weight:500;width:300px;margin-left:-102px">${role}</div></div>`); stage.appendChild(el); return el; });
+  const track = $(`<div class="abs" style="left:260px;top:${y + 17}px;width:1400px;height:3px;background:repeating-linear-gradient(90deg,#D4D4D8 0 10px,transparent 10px 20px)"></div>`); stage.insertBefore(track, stage.firstChild);
+  const file = $(`<div class="abs card" style="padding:18px 24px;display:flex;align-items:center;gap:14px;font-size:25px;font-weight:600;white-space:nowrap">
+    <div style="width:40px;height:48px;border-radius:6px;background:#1D6F42;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">XLS</div>TBE_v7_FINAL(2).xlsx
+    <span class="re" style="font-size:20px;color:#B03A28;font-weight:700"></span></div>`); stage.appendChild(file);
+  const qs = ["Where is 9.4 kW from?", "Which page is this?", "Can someone re-check row 14?"];
+  const bubbles = qs.map((q) => { const b = $(`<div class="bubble" style="font-size:27px;padding:16px 24px">${q}</div>`); stage.appendChild(b); return b; });
+  const stats = $(`<div class="abs" style="left:0;right:0;top:880px;display:flex;justify-content:center;gap:24px">
+    <div class="pill"><span style="width:12px;height:12px;border-radius:50%;background:#B03A28"></span>Days of manual work per package</div>
+    <div class="pill"><span style="width:12px;height:12px;border-radius:50%;background:#B03A28"></span>No trail back to the source</div>
+    <div class="pill"><span style="width:12px;height:12px;border-radius:50%;background:#B03A28"></span>Errors surface after the award</div></div>`);
+  stage.appendChild(stats);
+  const stops = [260, 500, 960, 1420, 1600];
+  return (t) => {
+    hl(t, 0.1, 0.03);
+    avs.forEach((a, i) => { const x = k(t, 0.3 + i * 0.12, 0.5, back); a.style.opacity = clamp(x); a.style.transform = `scale(${0.7 + 0.3 * x})`; });
+    track.style.opacity = k(t, 0.3, 0.6);
+    // File hops between approvers.
+    const legs = [[0.9, 1.0], [2.5, 1.0], [4.1, 1.0], [5.7, 0.9]];
+    let fx = stops[0];
+    legs.forEach(([t0, d], i) => { if (t >= t0) fx = lerp(stops[i], stops[i + 1], k(t, t0, d, easeInOut)); });
+    const hop = Math.sin(Math.PI * ((t - 0.9) % 1.6) / 1.0) * (t > 0.9 && ((t - 0.9) % 1.6) < 1 ? 1 : 0);
+    file.style.left = fx - 190 + "px"; file.style.top = y - 190 - hop * 36 + "px";
+    file.style.opacity = k(t, 0.6, 0.4);
+    const fwd = Math.min(3, legs.filter(([t0, d]) => t > t0 + d).length);
+    file.querySelector(".re").textContent = ["", "RE:", "RE: FW:", "RE: FW: RE:"][fwd];
+    bubbles.forEach((b, i) => {
+      const t0 = 2.0 + i * 1.6, a = k(t, t0, 0.4, back), out = k(t, t0 + 1.9, 0.35);
+      b.style.left = xs[i] - 40 + "px"; b.style.top = y - 330 + "px";
+      b.style.opacity = clamp(a) * (i === 2 ? 1 : 1 - out); b.style.transform = `scale(${0.6 + 0.4 * a})`; b.style.transformOrigin = "30px 100%";
+    });
+    const s = k(t, 5.4, 0.6); stats.style.opacity = s; stats.style.transform = `translateY(${(1 - s) * 20}px)`;
+  };
+}};
+
+// 4 · Everything converges into Oton
+SCENES.meet = { dur: 5.6, build() {
+  const thumbs = [];
+  for (let i = 0; i < 26; i++) {
+    const ang = (i / 26) * Math.PI * 2, rad = 560 + (i % 3) * 90;
+    const el = i % 5 === 0
+      ? $(`<div class="card abs" style="width:150px;height:96px;background:#fff"><div style="height:20px;background:#18181B;border-radius:13px 13px 0 0"></div>
+          <div style="margin:8px;height:52px;background:repeating-linear-gradient(0deg,#E6E6EA 0 1.5px,transparent 1.5px 13px),repeating-linear-gradient(90deg,#E6E6EA 0 1.5px,transparent 1.5px 36px)"></div></div>`)
+      : docCard(["VOLTAMP", "EMCO", "NORTHSTAR"][i % 3], "Bid · p." + (3 + i * 7), 120, 156, 3);
+    stage.appendChild(el);
+    thumbs.push({ el, x: 960 + Math.cos(ang) * rad * 1.35, y: 540 + Math.sin(ang) * rad * 0.62, r: ((i * 53) % 30) - 15, d: (i % 7) * 0.05 });
+  }
+  const glow = $(`<div class="abs" style="left:960px;top:470px;width:10px;height:10px"></div>`); stage.appendChild(glow);
+  const rings = [0, 1, 2].map(() => { const r = $(`<div class="abs" style="border-radius:50%;border:2px solid rgba(15,143,128,.5)"></div>`); stage.appendChild(r); return r; });
+  const logo = $(`<div class="abs" style="left:${960 - 70}px;top:${400 - 70}px">${logoTile(140)}</div>`); stage.appendChild(logo);
+  const halo = $(`<div class="abs" style="left:${960 - 260}px;top:${400 - 260}px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,166,.28),rgba(20,184,166,0) 65%)"></div>`); stage.insertBefore(halo, stage.firstChild);
+  const title = $(`<div class="abs" style="left:0;right:0;top:530px;text-align:center"><div style="font-size:84px;font-weight:800;letter-spacing:-.04em">Meet Oton.</div>
+    <div style="font-size:34px;font-weight:500;color:#52525B;margin-top:14px">AI bid evaluation that shows its work.</div></div>`); stage.appendChild(title);
+  return (t) => {
+    thumbs.forEach(({ el, x, y, r, d }) => {
+      const a = k(t, 0.2 + d, 1.3, easeIn);
+      el.style.left = lerp(x, 960, a) - 60 + "px"; el.style.top = lerp(y, 400, a) - 70 + "px";
+      el.style.transform = `rotate(${r * (1 - a)}deg) scale(${1 - 0.85 * a})`; el.style.opacity = (1 - k(t, 1.3 + d, 0.25)) * k(t, 0, 0.25);
+    });
+    const L = k(t, 1.45, 0.6, back); logo.style.transform = `scale(${L})`; logo.style.opacity = clamp(L * 2);
+    halo.style.opacity = k(t, 1.5, 0.6) * (0.75 + 0.25 * Math.sin(t * 3));
+    rings.forEach((r, i) => { const p = clamp((t - 1.6 - i * 0.35) / 1.4); const s = 140 + p * 420; r.style.width = r.style.height = s + "px"; r.style.left = 960 - s / 2 + "px"; r.style.top = 400 - s / 2 + "px"; r.style.opacity = p > 0 && p < 1 ? (1 - p) * 0.9 : 0; });
+    const T = k(t, 2.1, 0.7); title.style.opacity = T; title.style.transform = `translateY(${(1 - T) * 24}px)`;
+  };
+}};
+
+// 5 · Why it matters
+SCENES.benefits = { dur: 10.0, build() {
+  const hl = headline("Why it matters", "Faster awards. Fewer errors. Decisions you can defend.", 160, 150, 1600, "center");
+  const ic = {
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    link: '<path d="M9 15l6-6"/><path d="M11 6l1.5-1.5a4 4 0 0 1 5.66 5.66L16.5 11.7"/><path d="M13 18l-1.5 1.5a4 4 0 0 1-5.66-5.66L7.5 12.3"/>',
+    shield: '<path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+    trail: '<circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 6h4a4 4 0 0 1 4 4v0M7 18h4a4 4 0 0 0 4-4"/>',
+  };
+  const items = [
+    ["clock", "Days → minutes", "A full technical and commercial comparison as soon as the bids arrive."],
+    ["link", "Every value sourced", "Each cell links to the page and quote it came from."],
+    ["shield", "Standards built in", "Checked against IS / IEC clauses. Unknowns are flagged, never guessed."],
+    ["trail", "One audit trail", "Requisition, RFQ, evaluation, approval and PO in one place."],
+  ];
+  const cards = items.map(([i, h, p], n) => {
+    const el = $(`<div class="card abs" style="left:${160 + n * 405}px;top:470px;width:375px;height:330px;padding:36px 32px">
+      <div style="width:64px;height:64px;border-radius:16px;background:#18181B;display:flex;align-items:center;justify-content:center;margin-bottom:30px">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[i]}</svg></div>
+      <div style="font-size:33px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px">${h}</div>
+      <div style="font-size:21px;line-height:1.45;color:#52525B">${p}</div></div>`);
+    stage.appendChild(el); return el;
+  });
+  return (t) => {
+    hl(t, 0.15, 0.05);
+    cards.forEach((c, i) => { const a = k(t, 1.2 + i * 0.45, 0.7, back); c.style.opacity = clamp(a * 1.5); c.style.transform = `translateY(${(1 - a) * 60}px)`; });
+  };
+}};
+
+// 6 · Outro hub
+SCENES.outro = { dur: 7.0, build() {
+  const nodes = ["Requisition", "RFQ", "Bid evaluation", "Approval", "Purchase order"];
+  const cx = 960, cy = 470, R = 330;
+  const svg = $(`<svg class="abs" width="1920" height="1080" style="left:0;top:0"></svg>`); stage.appendChild(svg);
+  const pos = nodes.map((_, i) => { const a = -Math.PI / 2 + (i / nodes.length) * Math.PI * 2; return [cx + Math.cos(a) * R * 1.45, cy + Math.sin(a) * R]; });
+  const lines = pos.map(([x, y]) => { const l = document.createElementNS("http://www.w3.org/2000/svg", "line"); l.setAttribute("x1", cx); l.setAttribute("y1", cy); l.setAttribute("x2", x); l.setAttribute("y2", y); l.setAttribute("stroke", "rgba(15,143,128,.55)"); l.setAttribute("stroke-width", "2.5"); svg.appendChild(l); return l; });
+  const pulses = pos.map(() => { const c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("r", "7"); c.setAttribute("fill", "#14B8A6"); svg.appendChild(c); return c; });
+  const pills = nodes.map((n, i) => { const el = $(`<div class="abs pill" style="font-size:24px;padding:16px 26px">${n}</div>`); stage.appendChild(el); return el; });
+  const halo = $(`<div class="abs" style="left:${cx - 240}px;top:${cy - 240}px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,166,.25),rgba(20,184,166,0) 65%)"></div>`); stage.insertBefore(halo, stage.firstChild);
+  const logo = $(`<div class="abs" style="left:${cx - 64}px;top:${cy - 64}px">${logoTile(128)}</div>`); stage.appendChild(logo);
+  const end = $(`<div class="abs" style="left:0;right:0;top:600px;text-align:center"><div style="font-size:88px;font-weight:800;letter-spacing:-.04em">Oton</div>
+    <div style="font-size:36px;font-weight:500;color:#3F3F46;margin-top:12px">Procurement decisions you can trace.</div>
+    <div style="font-size:20px;color:#A1A1AA;margin-top:44px;letter-spacing:.08em">POWERED BY CLAUDE</div></div>`); stage.appendChild(end);
+  return (t) => {
+    const L = k(t, 0.1, 0.6, back); const fade = 1 - k(t, 3.7, 0.6);
+    halo.style.opacity = k(t, 0.2, 0.6) * (0.8 + 0.2 * Math.sin(t * 3));
+    pos.forEach(([x, y], i) => {
+      const a = k(t, 0.5 + i * 0.22, 0.6, easeInOut);
+      lines[i].setAttribute("x2", lerp(cx, x, a)); lines[i].setAttribute("y2", lerp(cy, y, a)); lines[i].style.opacity = fade;
+      const p = ((t - 1.6 - i * 0.18) % 1.4) / 1.4;
+      pulses[i].setAttribute("cx", lerp(cx, x, p)); pulses[i].setAttribute("cy", lerp(cy, y, p)); pulses[i].style.opacity = t > 1.6 ? fade * Math.sin(Math.PI * clamp(p)) : 0;
+      const b = k(t, 0.8 + i * 0.22, 0.5, back);
+      const w = pills[i].offsetWidth, h = pills[i].offsetHeight;
+      pills[i].style.left = x - w / 2 + "px"; pills[i].style.top = y - h / 2 + "px";
+      pills[i].style.opacity = clamp(b) * fade; pills[i].style.transform = `scale(${0.6 + 0.4 * b})`;
+    });
+    const up = k(t, 3.9, 0.9, easeInOut);
+    logo.style.transform = `translateY(${-up * 130}px) scale(${L})`; halo.style.transform = `translateY(${-up * 130}px)`;
+    const E = k(t, 4.3, 0.8); end.style.opacity = E; end.style.transform = `translateY(${(1 - E) * 24}px)`;
+  };
+}};
+
+let current = null;
+window.buildScene = (name) => { stage.innerHTML = ""; current = SCENES[name].build(); return SCENES[name].dur; };
+window.renderAt = (t) => current(t);
+window.sceneNames = () => Object.keys(SCENES);
+</script></body></html>
